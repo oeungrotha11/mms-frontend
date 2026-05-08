@@ -44,13 +44,34 @@ export default function Dashboard({ onNavigate }) {
     fetchData();
   }, []);
 
+  //format money
+  const formatMoney = (num) => {
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD"
+    }).format(num || 0);
+  };
+
+  const USD_TO_KHR = 4000;
+
+  const formatUSDToKHR = (usd) => {
+    const riel = (usd || 0) * USD_TO_KHR;
+    return `${riel.toLocaleString()} ៛`;
+  };
+
+  const formatCurrencyDual = (usd) => {
+    const riel = usd * 4000;
+
+    return `$${usd.toFixed(2)} (៛${riel.toLocaleString()} )`;
+  };
+
   return (
     <div>
       {/* Stat Cards */}
       <div className="stats-grid">
         <StatCard value={stats?.totalUsers || 0} label="Total Users" />
         <StatCard value={stats?.totalMovies || 0} label="Total Movies" />
-        <StatCard value={`$${stats?.revenue || 0}`} label="Revenue" />
+        <StatCard value={formatCurrencyDual(stats?.revenue)} label="Revenue" />
         <StatCard value={stats?.totalReviews || 0} label="Total Reviews" />
       </div>
 
@@ -82,7 +103,7 @@ export default function Dashboard({ onNavigate }) {
               </tr>
             </thead>
 
-            <tbody>
+            <tbody className='over'>
               {movies.length > 0 ? (
                 movies.slice(0, 5).map((m) => (
                   <tr key={m._id}>

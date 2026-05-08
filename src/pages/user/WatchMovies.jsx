@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import API from "../../api/axios";
+import { Link } from "react-router-dom";
 
 export default function WatchMovies() {
   const [movies, setMovies] = useState([]);
@@ -123,18 +124,22 @@ export default function WatchMovies() {
               <p style={{ fontSize: "12px", color: "#9ca3af" }}>
                 {m.category?.name || "No category"}
               </p>
+              <Link to={`/movies/${m._id}`}>
+                <button
+                  style={{
+                    marginTop: "10px",
+                    width: "100%",
+                    background: "#22c55e",
+                    border: "none",
+                    padding: "8px",
+                    borderRadius: "6px",
+                    cursor: "pointer"
+                  }}
+                >
+                  ▶ Watch
+                </button>
+              </Link>
 
-              <button style={{
-                marginTop: "10px",
-                width: "100%",
-                background: "#22c55e",
-                border: "none",
-                padding: "8px",
-                borderRadius: "6px",
-                cursor: "pointer"
-              }}>
-                ▶ Watch
-              </button>
             </div>
           ))}
         </div>

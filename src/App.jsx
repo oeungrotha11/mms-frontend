@@ -21,6 +21,7 @@ import WatchHistory from './pages/admin/WatchHistory';
 import AdminRoute from './routes/AdminRoute'
 import AuthRoute from './routes/AuthRoute'
 import WatchMovies from './pages/user/WatchMovies'
+import MovieDetail from './pages/user/MovieDetail'
 
 function App() {
 
@@ -106,6 +107,7 @@ function App() {
           <Route path="/" element={<Home />} />
           <Route path="/user" element={<User />} />
           <Route path="/watchMovies" element={<WatchMovies />} />
+          <Route path="/movies/:id" element={<MovieDetail />} />
 
         </Routes>
       </BrowserRouter>
