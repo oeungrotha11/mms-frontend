@@ -31,7 +31,7 @@ export default function AddMovie() {
       category: selectedCategory, // from DB (next step)
     };
 
-    console.log(movieData); // DEBUG
+    // console.log(movieData); // DEBUG
 
     const res = await fetch("http://localhost:5000/api/movies", {
       method: "POST",
@@ -44,7 +44,7 @@ export default function AddMovie() {
 
 
     const data = await res.json();
-    console.log("Saved:", data);
+    // console.log("Saved:", data);
 
   };
   const [categories, setCategories] = useState([]);

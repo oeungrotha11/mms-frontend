@@ -11,7 +11,7 @@ export default function Categories() {
   fetch("http://localhost:5000/api/movies/categories/with-count")
     .then(res => res.json())
     .then(data => {
-      console.log(data); // DEBUG
+      // console.log(data); // DEBUG
       setCategories(data);
     })
     .catch(err => console.error(err));
@@ -34,7 +34,7 @@ export default function Categories() {
 
       const data = await res.json();
 
-      console.log("Saved:", data);
+      // console.log("Saved:", data);
       if (res.ok) {
         setCategories([...categories, data]);
         setForm({ name: "", description: "" }); // clear form

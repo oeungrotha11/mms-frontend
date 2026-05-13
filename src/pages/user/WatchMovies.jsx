@@ -6,6 +6,20 @@ export default function WatchMovies() {
   const [movies, setMovies] = useState([]);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+
+  // DEBOUNCE SEARCH
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(search);
+      setPage(1);
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [search]);
 
   // 🔥 fetch movies (protected)
   const fetchMovies = async () => {
@@ -13,8 +27,15 @@ export default function WatchMovies() {
       setLoading(true);
       setError("");
 
-      const res = await API.get("/movies");
-      setMovies(res.data);
+      const res = await API.get("/movies", {
+        params: {
+          page,
+          search: debouncedSearch,
+          limit: 20
+        }
+      });
+      setMovies(res.data.movies || []);
+      setTotalPages(res.data.totalPages || 1);
 
     } catch (err) {
       const msg = err.response?.data;
@@ -33,7 +54,7 @@ export default function WatchMovies() {
 
   useEffect(() => {
     fetchMovies();
-  }, []);
+  }, [debouncedSearch, page]);
 
   // 🔥 TEST SUBSCRIBE BUTTON
   const handleTestSubscribe = async () => {
@@ -64,6 +85,24 @@ export default function WatchMovies() {
   return (
     <div style={{ padding: "20px" }}>
       <h2>🎬 Movies</h2>
+
+      {/* SEARCH BOX */}
+      <div style={{ marginBottom: "20px" }}>
+        <input
+          type="text"
+          placeholder="Search movies..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          style={{
+            width: "300px",
+            padding: "10px",
+            borderRadius: "8px",
+            border: "1px solid #444",
+            background: "#1f2937",
+            color: "#fff"
+          }}
+        />
+      </div>
 
       {/* ERROR STATE */}
       {error && (
@@ -142,6 +181,51 @@ export default function WatchMovies() {
 
             </div>
           ))}
+        </div>
+      )}
+
+      {/* PAGINATION */}
+      {!error && movies.length > 0 && (
+        <div style={{
+          marginTop: "30px",
+          display: "flex",
+          gap: "15px",
+          justifyContent: "center",
+          alignItems: "center"
+        }}>
+          <button
+            disabled={page === 1}
+            onClick={() => setPage(page - 1)}
+            style={{
+              padding: "8px 15px",
+              borderRadius: "6px",
+              border: "1px solid #4f46e5",
+              background: page === 1 ? "#6b7280" : "#4f46e5",
+              color: "#fff",
+              cursor: page === 1 ? "not-allowed" : "pointer"
+            }}
+          >
+            ← Prev
+          </button>
+
+          <span style={{ fontSize: "14px", color: "#9ca3af" }}>
+            Page {page} / {totalPages}
+          </span>
+
+          <button
+            disabled={page === totalPages}
+            onClick={() => setPage(page + 1)}
+            style={{
+              padding: "8px 15px",
+              borderRadius: "6px",
+              border: "1px solid #4f46e5",
+              background: page === totalPages ? "#6b7280" : "#4f46e5",
+              color: "#fff",
+              cursor: page === totalPages ? "not-allowed" : "pointer"
+            }}
+          >
+            Next →
+          </button>
         </div>
       )}
     </div>

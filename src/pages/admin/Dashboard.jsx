@@ -31,10 +31,10 @@ export default function Dashboard({ onNavigate }) {
         ]);
 
         setStats(statsRes.data);
-        setMovies(moviesRes.data);
+        setMovies(moviesRes.data.movies || []);
 
         // optional: if you want categories in state
-        console.log(categoryRes.data);
+        // console.log(categoryRes.data);
 
       } catch (err) {
         console.error("Dashboard error:", err);

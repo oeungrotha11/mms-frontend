@@ -37,7 +37,7 @@ export default function Sidebar() {
         setMovies(moviesRes.data);
 
         // optional: if you want categories in state
-        console.log(categoryRes.data);
+        // console.log(categoryRes.data);
 
       } catch (err) {
         console.error("Dashboard error:", err);
@@ -66,7 +66,7 @@ export default function Sidebar() {
       label: 'Users',
       items: [
         { icon: '👥', label: 'All Users', path: '/admin/users' },
-        { icon: '⭐', label: 'Reviews', path: '/admin/reviews', badge: '3', badgeRed: true },
+        { icon: '⭐', label: 'Reviews', path: '/admin/reviews',  badge: stats?.totalReviews ?? 0 },
       ],
     },
     {

@@ -1,67 +1,222 @@
 import PageHeader from '../../components/admincomponents/PageHeader';
 import Badge from '../../components/admincomponents/Badge';
 import ActionButtons from '../../components/admincomponents/ActionButtons';
+import EditMovieModal from '../../components/admincomponents/EditMovieModal';
 import { useEffect, useState } from 'react';
-
-// const movies = [
-//   { icon: '🎭', title: 'Dark Meridian',  uploaded: 'Uploaded Jan 12, 2024', category: 'Thriller', lang: 'English', year: 2024, duration: '2h 4m',  quality: 'purple', qualityLabel: '4K', rating: '8.2', status: 'green',  statusLabel: 'Active' },
-//   { icon: '🚀', title: 'Stellar Drift',  uploaded: 'Uploaded Dec 18, 2023', category: 'Sci-Fi',   lang: 'English', year: 2023, duration: '1h 58m', quality: 'green',  qualityLabel: 'HD', rating: '7.9', status: 'green',  statusLabel: 'Active' },
-//   { icon: '👁',  title: 'The Watcher',   uploaded: 'Uploaded Jan 14, 2024', category: 'Horror',   lang: 'English', year: 2024, duration: '2h 12m', quality: 'purple', qualityLabel: '4K', rating: '8.5', status: 'yellow', statusLabel: 'Pending' },
-//   { icon: '🌿', title: 'Green Solitude', uploaded: 'Uploaded Nov 5, 2023',  category: 'Drama',    lang: 'French',  year: 2023, duration: '1h 42m', quality: 'green',  qualityLabel: 'HD', rating: '7.3', status: 'green',  statusLabel: 'Active' },
-//   { icon: '🔥', title: 'Inferno Lane',   uploaded: 'Uploaded Jan 2, 2024',  category: 'Action',   lang: 'English', year: 2024, duration: '2h 6m',  quality: 'purple', qualityLabel: '4K', rating: '8.0', status: 'red',    statusLabel: 'Inactive' },
-// ];
+import { Link } from 'react-router-dom';
 
 export default function Movies({ onNavigate }) {
 
   const [movies, setMovies] = useState([]);
 
+  const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+
+  const [category, setCategory] = useState("");
+  const [quality, setQuality] = useState("");
+
+  const [categories, setCategories] = useState([]);
+
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingMovie, setEditingMovie] = useState(null);
+
+  // ================= DEBOUNCE SEARCH =================
   useEffect(() => {
-    fetch("http://localhost:5000/api/movies", {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(search);
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [search]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [category, quality, debouncedSearch]);
+
+  // ================= FETCH MOVIES =================
+  const fetchMovies = async () => {
+
+    let url = `http://localhost:5000/api/movies?page=${page}&search=${debouncedSearch}&category=${category}&quality=${quality}`;
+
+    const res = await fetch(url, {
       headers: {
         Authorization: `Bearer ${localStorage.getItem("token")}`
       }
-    })
-      .then(res => res.json())
-      .then(data => setMovies(data));
-  }, []);
-
-  const handleDelete = async (id) => {
-    await fetch(`http://localhost:5000/api/movies/${id}`, {
-      method: "DELETE"
     });
 
-    setMovies(movies.filter(m => m._id !== id));
+    const data = await res.json();
+
+    setMovies(data.movies || []);
+    setTotalPages(data.totalPages || 1);
   };
+
+  useEffect(() => {
+    fetchMovies();
+  }, [debouncedSearch, category, quality, page]);
+
+// ===========fetch update==========
+  const updateMovie = async (updatedMovie) => {
+
+    await fetch(
+      `http://localhost:5000/api/movies/${updatedMovie._id}`,
+      {
+        method: "PUT",
+
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`
+        },
+
+        body: JSON.stringify(updatedMovie)
+      }
+    );
+
+    fetchMovies();
+
+    setShowEditModal(false);
+  };
+
+  // ================= FETCH CATEGORIES =================
+  useEffect(() => {
+    fetch("http://localhost:5000/api/movies/categories")
+      .then(res => res.json())
+      .then(data => {
+        setCategories(Array.isArray(data) ? data : []);
+      })
+      .catch(() => setCategories([]));
+  }, []);
+
+  // ================= DELETE =================
+  const handleDelete = async (id, title) => {
+
+    const confirmDelete = window.confirm(`Delete "${title}" ?`);
+    if (!confirmDelete) return;
+
+    await fetch(`http://localhost:5000/api/movies/${id}`, {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("token")}`
+      }
+    });
+
+    setMovies(prev => prev.filter(m => m._id !== id));
+    alert("Movie deleted successfully");
+  };
+  // ================= edit =================
+  const handleEdit = (movie) => {
+    setEditingMovie(movie);
+    setShowEditModal(true);
+  };
+
+
+
+
+
+
 
   return (
     <div>
-      <PageHeader title="Movies" subtitle="Manage all movie content">
-        <input type="text" placeholder="Search movies…" style={{ width: '200px' }} />
-        <select><option>All Categories</option><option>Action</option><option>Thriller</option><option>Drama</option></select>
-        <select><option>All Quality</option><option>4K</option><option>HD</option></select>
-        <button className="btn-primary" onClick={() => onNavigate('add-movie')}>+ Add Movie</button>
+
+      <PageHeader
+        title="Movies"
+        subtitle="Manage all movie content"
+      >
+
+        {/* SEARCH */}
+        <input
+          type="text"
+          placeholder="Search movies..."
+          style={{ width: '220px' }}
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
+
+        {/* CATEGORY FILTER */}
+        <select
+          value={category}
+          onChange={(e) => {
+            setCategory(e.target.value);
+            setPage(1);
+          }}
+        >
+          <option value="">All Categories</option>
+
+          {categories.map(c => (
+            <option key={c._id} value={c._id}>
+              {c.name}
+            </option>
+          ))}
+        </select>
+
+        {/* QUALITY FILTER */}
+        <select
+          value={quality}
+          onChange={(e) => {
+            setQuality(e.target.value);
+            setPage(1);
+          }}
+        >
+          <option value="">All Quality</option>
+          <option value="4K">4K</option>
+          <option value="HD">HD</option>
+        </select>
+        <Link to={'/admin/add-movie'}>
+          <button
+            // onNavigate
+            className="btn-primary"
+            // onClick={() => onNavigate('add-movie')}
+          >
+            + Add Movie
+          </button>
+        </Link>
+
       </PageHeader>
 
-      <div className="table-card">
+      {/* TABLE */}
+      <div className="table-card" style={{ overflowX: "auto" }}>
+
         <table>
+
           <thead>
             <tr>
-              <th>Movie</th><th>Category</th><th>Language</th><th>Year</th>
-              <th>Duration</th><th>Quality</th><th>Rating</th><th>Status</th><th>Actions</th>
+              <th>Movie</th>
+              <th>Category</th>
+              <th>Language</th>
+              <th>Year</th>
+              <th>Duration</th>
+              <th>Quality</th>
+              <th>Rating</th>
+              <th>Status</th>
+              <th>Actions</th>
             </tr>
           </thead>
+
           <tbody>
+
             {movies.map((m) => (
+
               <tr key={m._id}>
+
                 <td>
                   <div className="td-movie">
-                    <div className="movie-thumb-sm">🎬</div>
+
+                    <div className="movie-thumb-sm">
+                      <img src={m.poster_url} alt={m.title} title={m.title} />
+                    </div>
+
                     <div>
-                      <div className="movie-title-sm">{m.title}</div>
+                      <div className="movie-title-sm">
+                        {m.title}
+                      </div>
+
                       <div className="movie-cat-sm">
                         {new Date(m.created_at).toDateString()}
                       </div>
                     </div>
+
                   </div>
                 </td>
 
@@ -71,28 +226,72 @@ export default function Movies({ onNavigate }) {
                 <td>{m.duration} min</td>
 
                 <td>
-                  <Badge color="green">{m.quality || "HD"}</Badge>
+                  <Badge color="green">
+                    {m.quality || "HD"}
+                  </Badge>
                 </td>
 
                 <td>
-                  <span className="star-rating">★</span> 8.0
+                  <span className="star-rating">★</span>{" "}
+                  {m.avgRating?.toFixed(1) || "0.0"}
                 </td>
 
                 <td>
-                  <Badge color="green">Active</Badge>
+                  <Badge color={m.status === "Active" ? "green" : "red"}>
+                    {m.status}
+                  </Badge>
                 </td>
 
                 <td>
                   <ActionButtons
-                    onEdit={() => { }}
-                    onDelete={() => handleDelete(m._id)}
+                    onEdit={() => handleEdit(m)}
+
+                    onDelete={() => handleDelete(m._id, m.title)}
                   />
                 </td>
+
               </tr>
+
             ))}
+
           </tbody>
+
         </table>
+
       </div>
+
+      {/* PAGINATION */}
+      <div style={{ marginTop: "15px", display: "flex", gap: "10px" }}>
+
+        <button
+          className='underline'
+          disabled={page === 1}
+          onClick={() => setPage(page - 1)}
+        >
+          Prev
+        </button>
+
+        <span>
+          Page {page} / {totalPages}
+        </span>
+
+        <button
+          className='underline'
+          disabled={page === totalPages}
+          onClick={() => setPage(page + 1)}
+        >
+          Next
+        </button>
+
+      </div>
+
+      {/* EDIT MOVIE MODAL */}
+      <EditMovieModal
+        open={showEditModal}
+        onClose={() => setShowEditModal(false)}
+        movie={editingMovie}
+        onSave={updateMovie}
+      />
     </div>
   );
 }
