@@ -1,6 +1,7 @@
 import PageHeader from '../../components/admincomponents/PageHeader';
 import ActionButtons from '../../components/admincomponents/ActionButtons';
 import AdminEditModal from '../../components/admincomponents/AdminEditModal';
+import { confirmDialog, showError, showSuccess } from '../../utils/swal';
 import { useEffect, useState } from 'react';
 
 export default function Categories() {
@@ -30,7 +31,8 @@ export default function Categories() {
       const res = await fetch("http://localhost:5000/api/movies/categories", {
         method: "POST",
         headers: {
-          "Content-Type": "application/json"
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`
         },
         body: JSON.stringify(form)
       });
@@ -41,8 +43,9 @@ export default function Categories() {
       if (res.ok) {
         setCategories([...categories, data]);
         setForm({ name: "", description: "" }); // clear form
+        showSuccess("Category added");
       } else {
-        alert(data.message || "Error saving category");
+        showError(data.message || "Error saving category");
       }
 
     } catch (err) {
@@ -62,24 +65,50 @@ export default function Categories() {
   };
 
   const handleSaveCategory = async (updatedCategory) => {
-    await fetch(`http://localhost:5000/api/movies/categories/${updatedCategory._id}`, {
+    const res = await fetch(`http://localhost:5000/api/movies/categories/${updatedCategory._id}`, {
       method: 'PUT',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${localStorage.getItem("token")}`
       },
       body: JSON.stringify(updatedCategory)
     });
 
-    setCategories(prev => prev.map(c => c._id === updatedCategory._id ? { ...c, ...updatedCategory } : c));
-    setShowEditModal(false);
+    const data = await res.json();
+
+    if (res.ok) {
+      setCategories(prev => prev.map(c => c._id === updatedCategory._id ? { ...c, ...data } : c));
+      setShowEditModal(false);
+      showSuccess("Category updated");
+    } else {
+      showError(data.message || "Error updating category");
+    }
   };
 
   const handleDelete = async (id) => {
-    await fetch(`http://localhost:5000/api/categories/${id}`, {
-      method: "DELETE"
+    const result = await confirmDialog({
+      title: "Delete category?",
+      text: "This will remove the category permanently.",
+      confirmButtonText: "Delete"
     });
 
-    setCategories(categories.filter(c => c._id !== id));
+    if (!result.isConfirmed) return;
+
+    const res = await fetch(`http://localhost:5000/api/movies/categories/${id}`, {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem("token")}`
+      }
+    });
+
+    const data = await res.json();
+
+    if (res.ok) {
+      setCategories(categories.filter(c => c._id !== id));
+      showSuccess(data.message || "Category deleted");
+    } else {
+      showError(data.message || "Error deleting category");
+    }
   };
 
   return (

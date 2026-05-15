@@ -4,10 +4,23 @@ import API from "../../api/axios";
 import PageHeader from '../../components/admincomponents/PageHeader';
 import Badge from '../../components/admincomponents/Badge';
 import ActionButtons from '../../components/admincomponents/ActionButtons';
+import AdminEditModal from '../../components/admincomponents/AdminEditModal';
+import { confirmDialog, showError, showInfo, showSuccess } from '../../utils/swal';
 
 export default function Users() {
 
   const [users, setUsers] = useState([]);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingUser, setEditingUser] = useState(null);
+
+  const userFields = [
+    { name: 'username', label: 'Username', type: 'text', placeholder: 'Username' },
+    { name: 'email', label: 'Email', type: 'text', placeholder: 'Email address' },
+    { name: 'role', label: 'Role', type: 'select', options: ['user', 'admin'] },
+    { name: 'status', label: 'Status', type: 'select', options: ['active', 'inactive', 'banned'] },
+    { name: 'phone', label: 'Phone', type: 'text', placeholder: 'Phone number' },
+    { name: 'profile_picture', label: 'Avatar URL', type: 'text', placeholder: 'Profile picture URL' }
+  ];
 
   // FETCH USERS
   const fetchUsers = async () => {
@@ -34,6 +47,50 @@ export default function Users() {
   // ROLE COLOR
   const getRoleColor = (role) => {
     return role === "admin" ? "orange" : "purple";
+  };
+
+  const handleViewUser = (user) => {
+    showInfo(`User: ${user.username}`, `
+      <p><strong>Email:</strong> ${user.email}</p>
+      <p><strong>Role:</strong> ${user.role}</p>
+      <p><strong>Status:</strong> ${user.status}</p>
+      <p><strong>Phone:</strong> ${user.phone || 'N/A'}</p>
+      <p><strong>Joined:</strong> ${new Date(user.created_at || user.createdAt).toLocaleDateString()}</p>
+    `);
+  };
+
+  const handleEditUser = (user) => {
+    setEditingUser(user);
+    setShowEditModal(true);
+  };
+
+  const handleSaveUser = async (updatedUser) => {
+    try {
+      const res = await API.put(`/users/${updatedUser._id}`, updatedUser);
+      setUsers(prev => prev.map(u => u._id === res.data._id ? res.data : u));
+      setShowEditModal(false);
+      showSuccess("User updated");
+    } catch (err) {
+      showError(err.response?.data?.message || "Failed to update user");
+    }
+  };
+
+  const handleDeleteUser = async (id) => {
+    const result = await confirmDialog({
+      title: "Delete user?",
+      text: "This will permanently delete the user.",
+      confirmButtonText: "Delete"
+    });
+
+    if (!result.isConfirmed) return;
+
+    try {
+      await API.delete(`/users/${id}`);
+      setUsers(prev => prev.filter(u => u._id !== id));
+      showSuccess("User deleted");
+    } catch (err) {
+      showError(err.response?.data?.message || "Failed to delete user");
+    }
   };
 
   return (
@@ -130,11 +187,9 @@ export default function Users() {
                   {/* ACTIONS */}
                   <td>
                     <ActionButtons
-                      onView={() => console.log("view", u._id)}
-
-                      onDelete={() =>
-                        console.log("delete", u._id)
-                      }
+                      onView={() => handleViewUser(u)}
+                      onEdit={() => handleEditUser(u)}
+                      onDelete={() => handleDeleteUser(u._id)}
                     />
                   </td>
 
@@ -154,6 +209,16 @@ export default function Users() {
         </table>
 
       </div>
+
+      <AdminEditModal
+        open={showEditModal}
+        onClose={() => setShowEditModal(false)}
+        title="Edit User"
+        submitLabel="Save Changes"
+        initialData={editingUser}
+        fields={userFields}
+        onSave={handleSaveUser}
+      />
 
     </div>
   );

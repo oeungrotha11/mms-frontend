@@ -1,17 +1,15 @@
 import { useEffect, useState } from "react";
 import PageHeader from '../../components/admincomponents/PageHeader';
 import ActionButtons from '../../components/admincomponents/ActionButtons';
+import AdminEditModal from '../../components/admincomponents/AdminEditModal';
+import { confirmDialog, showError, showSuccess } from '../../utils/swal';
 import API from "../../api/axios";
-
-const plans = [
-  { name: 'Basic', price: '$4.99/mo', duration: '30 days', quality: 'HD', devices: 1, desc: 'Entry-level plan' },
-  { name: 'Standard', price: '$9.99/mo', duration: '30 days', quality: 'Full HD + 4K', devices: 2, desc: 'Most popular plan' },
-  { name: 'Premium', price: '$14.99/mo', duration: '30 days', quality: '4K Ultra HD', devices: 4, desc: 'All features' },
-];
 
 export default function Plans() {
   const [plans, setPlans] = useState([]);
   const [showForm, setShowForm] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingPlan, setEditingPlan] = useState(null);
 
   const [form, setForm] = useState({
     name: "",
@@ -21,6 +19,15 @@ export default function Plans() {
     devices: "",
     description: ""
   });
+
+  const planFields = [
+    { name: 'name', label: 'Plan Name', type: 'text', placeholder: 'Enter plan name' },
+    { name: 'price', label: 'Price', type: 'number', placeholder: 'Price' },
+    { name: 'duration_days', label: 'Duration (days)', type: 'number', placeholder: 'Duration' },
+    { name: 'quality', label: 'Quality', type: 'text', placeholder: 'Quality' },
+    { name: 'devices', label: 'Devices', type: 'number', placeholder: 'Devices' },
+    { name: 'description', label: 'Description', type: 'textarea', placeholder: 'Description' }
+  ];
 
   // ✅ Fetch plans
   const fetchPlans = async () => {
@@ -43,6 +50,16 @@ export default function Plans() {
 
   // ✅ Add plan
   const handleAdd = async () => {
+    if (!form.name || !form.price || !form.duration_days || !form.devices) {
+      showError("Please fill all required fields");
+      return;
+    }
+
+    if (isNaN(form.price) || isNaN(form.duration_days) || isNaN(form.devices)) {
+      showError("Price, Duration, and Devices must be numbers");
+      return;
+    }
+
     try {
       await API.post("/subscriptions/plans", {
         ...form,
@@ -52,33 +69,54 @@ export default function Plans() {
       });
 
       setShowForm(false);
+      setForm({ name: "", price: "", duration_days: "", quality: "", devices: "", description: "" });
       fetchPlans();
-
-      if (!form.name || !form.price || !form.duration_days || !form.devices) {
-        alert("Please fill all required fields");
-        return;
-      }
-
-      if (isNaN(form.price) || isNaN(form.duration_days) || isNaN(form.devices)) {
-        alert("Price, Duration, and Devices must be numbers");
-        return;
-      }
-
+      showSuccess("Plan added");
     } catch (err) {
       console.error(err.response?.data || err);
-      alert("Failed to add plan");
+      showError(err.response?.data?.message || "Failed to add plan");
+    }
+  };
+
+  const handleEditPlan = (plan) => {
+    setEditingPlan(plan);
+    setShowEditModal(true);
+  };
+
+  const handleSavePlan = async (updatedPlan) => {
+    try {
+      const res = await API.put(`/subscriptions/plans/${updatedPlan._id}`, {
+        ...updatedPlan,
+        price: Number(updatedPlan.price),
+        duration_days: Number(updatedPlan.duration_days),
+        devices: Number(updatedPlan.devices)
+      });
+      setPlans(prev => prev.map(p => p._id === res.data._id ? res.data : p));
+      setShowEditModal(false);
+      showSuccess("Plan updated");
+    } catch (err) {
+      console.error(err.response?.data || err);
+      showError(err.response?.data?.message || "Failed to update plan");
     }
   };
 
   // ✅ Delete plan
   const handleDelete = async (id) => {
-    if (!window.confirm("Delete this plan?")) return;
+    const result = await confirmDialog({
+      title: "Delete plan?",
+      text: "This will permanently delete the plan.",
+      confirmButtonText: "Delete"
+    });
+
+    if (!result.isConfirmed) return;
 
     try {
       await API.delete(`/subscriptions/plans/${id}`);
       fetchPlans();
+      showSuccess("Plan deleted");
     } catch (err) {
       console.error(err);
+      showError("Failed to delete plan");
     }
   };
 
@@ -149,6 +187,7 @@ export default function Plans() {
 
                   <td>
                     <ActionButtons
+                      onEdit={() => handleEditPlan(p)}
                       onDelete={() => handleDelete(p._id)}
                     />
                   </td>
@@ -162,6 +201,16 @@ export default function Plans() {
           </tbody>
         </table>
       </div>
+
+      <AdminEditModal
+        open={showEditModal}
+        onClose={() => setShowEditModal(false)}
+        title="Edit Plan"
+        submitLabel="Save Changes"
+        initialData={editingPlan}
+        fields={planFields}
+        onSave={handleSavePlan}
+      />
     </div>
   );
 }

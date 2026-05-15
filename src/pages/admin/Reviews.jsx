@@ -3,6 +3,7 @@ import PageHeader from "../../components/admincomponents/PageHeader";
 import Badge from "../../components/admincomponents/Badge";
 import ActionButtons from "../../components/admincomponents/ActionButtons";
 import API from "../../api/axios";
+import { confirmDialog, showSuccess, showError } from '../../utils/swal';
 
 export default function Reviews() {
 
@@ -34,28 +35,32 @@ export default function Reviews() {
   // DELETE REVIEW
   const handleDelete = async (id) => {
     try {
+      const result = await confirmDialog({
+        title: "Delete review?",
+        text: "This review will be removed permanently.",
+        confirmButtonText: "Delete"
+      });
 
-      if (!window.confirm("Delete this review?")) return;
+      if (!result.isConfirmed) return;
 
       await API.delete(`/reviews/${id}`);
-
       fetchReviews();
-
+      showSuccess("Review deleted");
     } catch (err) {
       console.error(err);
+      showError("Failed to delete review");
     }
   };
 
   // APPROVE REVIEW
   const handleApprove = async (id) => {
     try {
-
       await API.put(`/reviews/${id}/approve`);
-
       fetchReviews();
-
+      showSuccess("Review approved");
     } catch (err) {
       console.error(err);
+      showError("Failed to update review status");
     }
   };
 

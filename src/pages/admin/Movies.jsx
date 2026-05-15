@@ -2,6 +2,7 @@ import PageHeader from '../../components/admincomponents/PageHeader';
 import Badge from '../../components/admincomponents/Badge';
 import ActionButtons from '../../components/admincomponents/ActionButtons';
 import AdminEditModal from '../../components/admincomponents/AdminEditModal';
+import { confirmDialog, showSuccess, showError } from '../../utils/swal';
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 
@@ -115,19 +116,28 @@ useEffect(() => {
 
   // ================= DELETE =================
   const handleDelete = async (id, title) => {
-
-    const confirmDelete = window.confirm(`Delete "${title}" ?`);
-    if (!confirmDelete) return;
-
-    await fetch(`http://localhost:5000/api/movies/${id}`, {
-      method: "DELETE",
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem("token")}`
-      }
+    const result = await confirmDialog({
+      title: `Delete ${title}?`,
+      text: "This will remove the movie permanently.",
+      confirmButtonText: "Delete"
     });
 
-    setMovies(prev => prev.filter(m => m._id !== id));
-    alert("Movie deleted successfully");
+    if (!result.isConfirmed) return;
+
+    try {
+      await fetch(`http://localhost:5000/api/movies/${id}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`
+        }
+      });
+
+      setMovies(prev => prev.filter(m => m._id !== id));
+      showSuccess("Movie deleted successfully");
+    } catch (err) {
+      console.error(err);
+      showError("Failed to delete movie");
+    }
   };
   // ================= edit =================
   const handleEdit = (movie) => {
