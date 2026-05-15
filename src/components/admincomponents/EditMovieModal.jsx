@@ -4,8 +4,27 @@ export default function EditMovieModal({
   open,
   onClose,
   movie,
-  onSave
-}) {
+  onSave,
+  categories = []
+}) 
+{
+
+  const inputStyle = {
+  width: "100%",
+  padding: "10px",
+  borderRadius: "8px",
+  border: "1px solid #374151",
+  background: "#1f2937",
+  color: "#fff",
+  boxSizing: "border-box"
+};
+
+const labelStyle = {
+  display: "block",
+  marginBottom: "8px",
+  fontSize: "14px",
+  fontWeight: "500"
+};
 
   const [formData, setFormData] = useState(movie || {});
 
@@ -25,9 +44,27 @@ export default function EditMovieModal({
   };
 
   const handleSubmit = () => {
-    onSave(formData);
+    const cleanedCategory = (() => {
+      if (!formData.category) return undefined;
+      if (typeof formData.category === "string") {
+        const selected = categories.find(c => c._id === formData.category);
+        return selected ? { _id: selected._id, name: selected.name } : formData.category;
+      }
+      if (formData.category._id && formData.category.name) {
+        return { _id: formData.category._id, name: formData.category.name };
+      }
+      return formData.category;
+    })();
+
+    const cleanedData = {
+      ...formData,
+      category: cleanedCategory
+    };
+
+    onSave(cleanedData);
   };
 
+  
   return (
     <div
       style={{
@@ -79,7 +116,7 @@ export default function EditMovieModal({
 
         {/* FORM FIELDS */}
         <div style={{ display: "flex", flexDirection: "column", gap: "15px", marginBottom: "25px" }}>
-          
+
           {/* Title */}
           <div>
             <label style={{ display: "block", marginBottom: "8px", fontSize: "14px", fontWeight: "500" }}>
@@ -128,20 +165,18 @@ export default function EditMovieModal({
             <label style={{ display: "block", marginBottom: "8px", fontSize: "14px", fontWeight: "500" }}>
               Language
             </label>
-            <input
-              type="text"
-              value={formData.language || ''}
-              onChange={(e) => handleChange('language', e.target.value)}
-              style={{
-                width: "100%",
-                padding: "10px",
-                borderRadius: "8px",
-                border: "1px solid #374151",
-                background: "#1f2937",
-                color: "#fff",
-                boxSizing: "border-box"
-              }}
-            />
+            <select
+  value={formData.language || "English"}
+  onChange={(e) =>
+    handleChange("language", e.target.value)
+  }
+  style={inputStyle}
+>
+  <option>English</option>
+  <option>French</option>
+  <option>Spanish</option>
+  <option>Korean</option>
+</select>
           </div>
 
           {/* Release Year & Duration */}
@@ -187,6 +222,74 @@ export default function EditMovieModal({
             </div>
           </div>
 
+          {/* Category */}
+          <div>
+            <label
+              style={{
+                display: "block",
+                marginBottom: "8px",
+                fontSize: "14px",
+                fontWeight: "500"
+              }}
+            >
+              Category
+            </label>
+
+            <select
+              value={formData.category?._id || formData.category || ""}
+              onChange={(e) => {
+                const selected = categories.find(c => c._id === e.target.value);
+                handleChange("category", selected || e.target.value);
+              }}
+              style={inputStyle}
+            >
+              <option value="">Select Category</option>
+
+              {categories.map((cat) => (
+                <option key={cat._id} value={cat._id}>
+                  {cat.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* File Path */}
+<div>
+  <label style={labelStyle}>
+    File Path
+  </label>
+
+  <input
+    type="text"
+    value={formData.file_path || ""}
+    onChange={(e) =>
+      handleChange("file_path", e.target.value)
+    }
+    placeholder="/movies/movie.mp4"
+    style={inputStyle}
+  />
+</div>
+
+{/* File Size */}
+<div>
+  <label style={labelStyle}>
+    File Size (MB)
+  </label>
+
+  <input
+    type="number"
+    value={formData.file_size || ""}
+    onChange={(e) =>
+      handleChange(
+        "file_size",
+        parseInt(e.target.value) || 0
+      )
+    }
+    style={inputStyle}
+  />
+</div>
+
+
           {/* Quality & Status */}
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
             <div>
@@ -206,8 +309,10 @@ export default function EditMovieModal({
                   boxSizing: "border-box"
                 }}
               >
-                <option value="HD">HD</option>
                 <option value="4K">4K</option>
+<option value="Full HD">Full HD</option>
+<option value="HD">HD</option>
+<option value="SD">SD</option>
               </select>
             </div>
 
@@ -256,9 +361,9 @@ export default function EditMovieModal({
             />
             {formData.poster_url && (
               <div style={{ marginTop: "12px", textAlign: "center" }}>
-                <img 
-                  src={formData.poster_url} 
-                  alt="Poster preview" 
+                <img
+                  src={formData.poster_url}
+                  alt="Poster preview"
                   style={{ maxWidth: "100%", maxHeight: "150px", borderRadius: "8px" }}
                   onError={(e) => e.target.style.display = "none"}
                 />

@@ -1,11 +1,13 @@
 import PageHeader from '../../components/admincomponents/PageHeader';
 import Badge from '../../components/admincomponents/Badge';
 import ActionButtons from '../../components/admincomponents/ActionButtons';
-import EditMovieModal from '../../components/admincomponents/EditMovieModal';
+import AdminEditModal from '../../components/admincomponents/AdminEditModal';
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
-export default function Movies({ onNavigate }) {
+export default function Movies() {
+
+  const navigate = useNavigate();
 
   const [movies, setMovies] = useState([]);
 
@@ -16,8 +18,34 @@ export default function Movies({ onNavigate }) {
   const [quality, setQuality] = useState("");
 
   const [categories, setCategories] = useState([]);
+  const [editingCategory, setEditingCategory] = useState(null);
+  const [newName, setNewName] = useState("");
 
   const [page, setPage] = useState(1);
+
+  const movieFields = [
+    { name: 'title', label: 'Title', type: 'text', placeholder: 'Movie title' },
+    { name: 'description', label: 'Description', type: 'textarea', placeholder: 'Movie description' },
+    { name: 'language', label: 'Language', type: 'select', options: ['English', 'French', 'Spanish', 'Korean'] },
+    { name: 'release_year', label: 'Release Year', type: 'number', placeholder: '1991' },
+    { name: 'duration', label: 'Duration (min)', type: 'number', placeholder: '120' },
+    {
+      name: 'category',
+      label: 'Category',
+      type: 'select',
+      options: categories.map(c => ({ value: c._id, label: c.name })),
+      transform: value => {
+        const selected = categories.find(c => c._id === value);
+        return selected ? { _id: selected._id, name: selected.name } : value;
+      }
+    },
+    { name: 'file_path', label: 'File Path', type: 'text', placeholder: '/movies/movie.mp4' },
+    { name: 'file_size', label: 'File Size (MB)', type: 'number', placeholder: '0' },
+    { name: 'quality', label: 'Quality', type: 'select', options: ['4K', 'Full HD', 'HD', 'SD'] },
+    { name: 'status', label: 'Status', type: 'select', options: ['Active', 'Inactive'] },
+    { name: 'poster_url', label: 'Poster URL', type: 'text', placeholder: 'https://example.com/poster.jpg' },
+    { name: 'trailer_url', label: 'Trailer URL', type: 'text', placeholder: 'https://youtube.com/embed/...'}
+  ];
   const [totalPages, setTotalPages] = useState(1);
 
   const [showEditModal, setShowEditModal] = useState(false);
@@ -57,37 +85,33 @@ export default function Movies({ onNavigate }) {
     fetchMovies();
   }, [debouncedSearch, category, quality, page]);
 
-// ===========fetch update==========
-  const updateMovie = async (updatedMovie) => {
+  // ================= FETCH CATEGORIES =================
+  const fetchCategories = async () => {
 
-    await fetch(
-      `http://localhost:5000/api/movies/${updatedMovie._id}`,
-      {
-        method: "PUT",
+  try {
 
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("token")}`
-        },
-
-        body: JSON.stringify(updatedMovie)
-      }
+    const res = await fetch(
+      "http://localhost:5000/api/movies/categories"
     );
 
-    fetchMovies();
+    const data = await res.json();
 
-    setShowEditModal(false);
-  };
+    setCategories(
+      Array.isArray(data) ? data : []
+    );
 
-  // ================= FETCH CATEGORIES =================
-  useEffect(() => {
-    fetch("http://localhost:5000/api/movies/categories")
-      .then(res => res.json())
-      .then(data => {
-        setCategories(Array.isArray(data) ? data : []);
-      })
-      .catch(() => setCategories([]));
-  }, []);
+  } catch (err) {
+
+    console.error(err);
+    setCategories([]);
+
+  }
+};
+
+useEffect(() => {
+  fetchCategories();
+}, []);
+  
 
   // ================= DELETE =================
   const handleDelete = async (id, title) => {
@@ -109,6 +133,23 @@ export default function Movies({ onNavigate }) {
   const handleEdit = (movie) => {
     setEditingMovie(movie);
     setShowEditModal(true);
+  };
+
+  const handleSaveMovie = async (updatedMovie) => {
+    await fetch(
+      `http://localhost:5000/api/movies/${updatedMovie._id}`,
+      {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`
+        },
+        body: JSON.stringify(updatedMovie)
+      }
+    );
+
+    fetchMovies();
+    setShowEditModal(false);
   };
 
 
@@ -142,6 +183,54 @@ export default function Movies({ onNavigate }) {
             setPage(1);
           }}
         >
+          <div
+  style={{
+    marginBottom: "20px",
+    display: "flex",
+    gap: "10px",
+    flexWrap: "wrap"
+  }}
+>
+
+  {categories.map((cat) => (
+
+    <div
+      key={cat._id}
+      style={{
+        background: "#111827",
+        padding: "10px 14px",
+        borderRadius: "10px",
+        display: "flex",
+        alignItems: "center",
+        gap: "10px",
+        color: "white"
+      }}
+    >
+
+      <span>{cat.name}</span>
+
+      <button
+        onClick={() => {
+          setEditingCategory(cat);
+          setNewName(cat.name);
+        }}
+        style={{
+          border: "none",
+          background: "#4f46e5",
+          color: "white",
+          padding: "5px 10px",
+          borderRadius: "6px",
+          cursor: "pointer"
+        }}
+      >
+        Edit
+      </button>
+
+    </div>
+
+  ))}
+
+</div>
           <option value="">All Categories</option>
 
           {categories.map(c => (
@@ -161,13 +250,15 @@ export default function Movies({ onNavigate }) {
         >
           <option value="">All Quality</option>
           <option value="4K">4K</option>
-          <option value="HD">HD</option>
+<option value="Full HD">Full HD</option>
+<option value="HD">HD</option>
+<option value="SD">SD</option>
         </select>
         <Link to={'/admin/add-movie'}>
           <button
             // onNavigate
             className="btn-primary"
-            // onClick={() => onNavigate('add-movie')}
+          // onClick={() => onNavigate('add-movie')}
           >
             + Add Movie
           </button>
@@ -198,13 +289,17 @@ export default function Movies({ onNavigate }) {
 
             {movies.map((m) => (
 
-              <tr key={m._id}>
+              <tr key={m._id}
+
+              >
 
                 <td>
                   <div className="td-movie">
 
                     <div className="movie-thumb-sm">
-                      <img src={m.poster_url} alt={m.title} title={m.title} />
+                      <img src={m.poster_url} alt={m.title} title={m.title}
+                        onClick={() => navigate(`/movies/${m._id}`)}
+                        style={{ cursor: "pointer" }} />
                     </div>
 
                     <div>
@@ -286,12 +381,17 @@ export default function Movies({ onNavigate }) {
       </div>
 
       {/* EDIT MOVIE MODAL */}
-      <EditMovieModal
+      <AdminEditModal
         open={showEditModal}
         onClose={() => setShowEditModal(false)}
-        movie={editingMovie}
-        onSave={updateMovie}
+        title="Edit Movie"
+        submitLabel="Save Changes"
+        initialData={editingMovie}
+        fields={movieFields}
+        onSave={handleSaveMovie}
       />
+
+      
     </div>
   );
 }

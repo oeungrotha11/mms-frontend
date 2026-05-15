@@ -4,8 +4,9 @@ import ActivityFeed from '../../components/admincomponents/ActivityFeed';
 import StatCard from '../../components/admincomponents/StatCard';
 import { useEffect, useState } from "react";
 import API from "../../api/axios";
+import { useNavigate } from 'react-router-dom';
 
-export default function Dashboard({ onNavigate }) {
+export default function Dashboard() {
 
   // ✅ MUST be inside component
   const [stats, setStats] = useState({
@@ -19,6 +20,7 @@ export default function Dashboard({ onNavigate }) {
     activities: []
   });
   const [movies, setMovies] = useState([]);
+  const navigate = useNavigate();
 
   // ✅ MUST be inside component
   useEffect(() => {
@@ -69,16 +71,33 @@ export default function Dashboard({ onNavigate }) {
     <div>
       {/* Stat Cards */}
       <div className="stats-grid">
-        <StatCard value={stats?.totalUsers || 0} label="Total Users" />
-        <StatCard value={stats?.totalMovies || 0} label="Total Movies" />
-        <StatCard value={formatCurrencyDual(stats?.revenue)} label="Revenue" />
-        <StatCard value={stats?.totalReviews || 0} label="Total Reviews" />
+        <div onClick={() => navigate("/admin/users")} style={{ cursor: "pointer" }}>
+          <StatCard value={stats?.totalUsers || 0} label="Total Users" />
+        </div>
+
+        <div onClick={() => navigate("/admin/movies")} style={{ cursor: "pointer" }}>
+          <StatCard value={stats?.totalMovies || 0} label="Total Movies" />
+        </div>
+
+        <div onClick={() => navigate("/admin/payments")} style={{ cursor: "pointer" }}>
+          <StatCard
+            value={formatCurrencyDual(stats?.revenue)}
+            label="Revenue"
+          />
+        </div>
+
+        <div onClick={() => navigate("/admin/reviews")} style={{ cursor: "pointer" }}>
+          <StatCard value={stats?.totalReviews || 0} label="Total Reviews" />
+        </div>
       </div>
 
       {/* Charts */}
       <div className="charts-grid">
         <BarChart data={stats?.monthlyRevenue} />
-        <DonutChart data={stats?.categoryStats} />
+        <DonutChart data={stats?.categoryStats}
+          onCategoryClick={(category) =>
+            navigate(`/admin/categories/${category}`)
+          } />
       </div>
 
       {/* Bottom Row */}
@@ -86,39 +105,62 @@ export default function Dashboard({ onNavigate }) {
 
         {/* Recent Movies */}
         <div className="table-card">
+
           <div className="table-header">
-            <div className="table-title">Recently Added Movies</div>
+            <div className="table-title">
+              Recently Added Movies
+            </div>
+
             <div className="table-actions">
-              <button className="btn-sm" onClick={() => onNavigate('movies')}>View All</button>
-              <button className="btn-sm primary" onClick={() => onNavigate('add-movie')}>+ Add</button>
+              <button
+                className="btn-sm"
+                onClick={() => navigate('/admin/movies')}
+              >
+                View All
+              </button>
+
+              <button
+                className="btn-sm primary"
+                onClick={() => navigate('/admin/add-movie')}
+              >
+                + Add
+              </button>
             </div>
           </div>
 
-          <table>
-            <thead>
-              <tr>
-                <th>Movie</th>
-                <th>Category</th>
-                <th>Rating</th>
-              </tr>
-            </thead>
+          <div className="movie-scroll">
 
-            <tbody className='over'>
-              {movies.length > 0 ? (
-                movies.slice(0, 5).map((m) => (
-                  <tr key={m._id}>
-                    <td>{m.title}</td>
-                    <td>{m.category?.name || "N/A"}</td>
-                    <td>★ {m.rating || "0"}</td>
-                  </tr>
-                ))
-              ) : (
+            <table>
+              <thead>
                 <tr>
-                  <td colSpan="3">No movies found</td>
+                  <th>Movie</th>
+                  <th>Category</th>
+                  <th>Rating</th>
                 </tr>
-              )}
-            </tbody>
-          </table>
+              </thead>
+
+              <tbody className='over'>
+                {movies.length > 0 ? (
+                  movies.map((m) => (
+                    <tr
+                      key={m._id}
+                      onClick={() => navigate(`/movies/${m._id}`)}
+                      style={{ cursor: "pointer" }}
+                    >
+                      <td>{m.title}</td>
+                      <td>{m.category?.name || "N/A"}</td>
+                      <td>★ {m.rating || "0"}</td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan="3">No movies found</td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+
+          </div>
         </div>
 
         {/* Activity Feed */}

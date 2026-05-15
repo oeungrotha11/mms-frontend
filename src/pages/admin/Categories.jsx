@@ -1,11 +1,14 @@
 import PageHeader from '../../components/admincomponents/PageHeader';
 import ActionButtons from '../../components/admincomponents/ActionButtons';
+import AdminEditModal from '../../components/admincomponents/AdminEditModal';
 import { useEffect, useState } from 'react';
 
 export default function Categories() {
 
   const [categories, setCategories] = useState([]);
   const [form, setForm] = useState({ name: "", description: "" });
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingCategory, setEditingCategory] = useState(null);
 
  useEffect(() => {
   fetch("http://localhost:5000/api/movies/categories/with-count")
@@ -46,6 +49,29 @@ export default function Categories() {
       console.error(err);
     }
     // setCategories([...categories, data]);
+  };
+
+  const categoryFields = [
+    { name: 'name', label: 'Category Name', type: 'text', placeholder: 'Enter category name' },
+    { name: 'description', label: 'Description', type: 'textarea', placeholder: 'Enter category description' }
+  ];
+
+  const handleEditCategory = (category) => {
+    setEditingCategory(category);
+    setShowEditModal(true);
+  };
+
+  const handleSaveCategory = async (updatedCategory) => {
+    await fetch(`http://localhost:5000/api/movies/categories/${updatedCategory._id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(updatedCategory)
+    });
+
+    setCategories(prev => prev.map(c => c._id === updatedCategory._id ? { ...c, ...updatedCategory } : c));
+    setShowEditModal(false);
   };
 
   const handleDelete = async (id) => {
@@ -113,7 +139,7 @@ export default function Categories() {
                 </td>
                 <td>
                   <ActionButtons
-                    onEdit={() => { }}
+                    onEdit={() => handleEditCategory(c)}
                     onDelete={() => handleDelete(c._id)}
                   />
                 </td>
@@ -122,6 +148,16 @@ export default function Categories() {
           </tbody>
         </table>
       </div>
+
+      <AdminEditModal
+        open={showEditModal}
+        onClose={() => setShowEditModal(false)}
+        title="Edit Category"
+        submitLabel="Save Changes"
+        initialData={editingCategory}
+        fields={categoryFields}
+        onSave={handleSaveCategory}
+      />
     </div>
   );
 }

@@ -28,6 +28,7 @@ export default function CategoryChart({ data }) {
                 data={chartData}
                 dataKey="value"
                 nameKey="name"
+                onClick={(item) => onCategoryClick(item.name)}
                 innerRadius={58}
                 outerRadius={86}
                 paddingAngle={3}
