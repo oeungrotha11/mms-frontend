@@ -50,7 +50,7 @@ export default function Plans() {
 
   // ✅ Add plan
   const handleAdd = async () => {
-    if (!form.name || !form.price || !form.duration_days || !form.devices) {
+    if (!form.name || form.price === "" || form.duration_days === "" || form.devices === "") {
       showError("Please fill all required fields");
       return;
     }
@@ -120,6 +120,8 @@ export default function Plans() {
     }
   };
 
+  const hasFreePlan = plans.some((plan) => Number(plan.price) === 0);
+
   return (
     <div>
       <PageHeader
@@ -133,6 +135,12 @@ export default function Plans() {
           + Add Plan
         </button>
       </PageHeader>
+
+      {!hasFreePlan && (
+        <div className="table-card" style={{ borderLeft: '4px solid #4f46e5', marginBottom: '1rem', padding: '16px 20px' }}>
+          <strong>Tip:</strong> Add a Free plan to let new users try your service before upgrading.
+        </div>
+      )}
 
       {/* ✅ ADD FORM */}
       {showForm && (
@@ -174,7 +182,7 @@ export default function Plans() {
                   <td><strong>{p.name}</strong></td>
 
                   <td style={{ color: 'var(--accent)', fontWeight: 600 }}>
-                    ${p.price}
+                    {Number(p.price) === 0 ? 'Free' : `$${p.price}`}
                   </td>
 
                   <td>{p.duration_days} days</td>

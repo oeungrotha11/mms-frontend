@@ -2,7 +2,7 @@ import PageHeader from '../../components/admincomponents/PageHeader';
 import Badge from '../../components/admincomponents/Badge';
 import ActionButtons from '../../components/admincomponents/ActionButtons';
 import AdminEditModal from '../../components/admincomponents/AdminEditModal';
-import { confirmDialog, showSuccess, showError } from '../../utils/swal';
+import { confirmDialog, showSuccess, showError,showInfo } from '../../utils/swal';
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 
@@ -160,6 +160,25 @@ useEffect(() => {
 
     fetchMovies();
     setShowEditModal(false);
+  };
+
+  const handleViewMovie = (movie) => {
+    const poster = movie.poster_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(movie.title)}`;
+    showInfo(`${movie.title}`, `
+      <div style="display:flex;justify-content:center;margin-bottom:16px">
+        <img
+          src="${poster}"
+          alt="${movie.title}"
+          style="width:160px;height:160px;border-radius:50%;object-fit:cover;border:2px solid rgba(255,255,255,0.28)"
+        />
+      </div>
+      <p><strong>Category:</strong> ${movie.category?.name || 'N/A'}</p>
+      <p><strong>Quality:</strong> ${movie.quality || 'N/A'}</p>
+      <p><strong>Duration:</strong> ${movie.duration} min</p>
+      <p><strong>Language:</strong> ${movie.language || 'N/A'}</p>
+      <p><strong>Release:</strong> ${movie.release_year || 'N/A'}</p>
+      <p><strong>Status:</strong> ${movie.status || 'N/A'}</p>
+    `);
   };
 
 
@@ -350,6 +369,7 @@ useEffect(() => {
                 <td>
                   <ActionButtons
                     onEdit={() => handleEdit(m)}
+                    onView={() => handleViewMovie(m)}
 
                     onDelete={() => handleDelete(m._id, m.title)}
                   />

@@ -4,7 +4,9 @@ import ActivityFeed from '../../components/admincomponents/ActivityFeed';
 import StatCard from '../../components/admincomponents/StatCard';
 import { useEffect, useState } from "react";
 import API from "../../api/axios";
+import { showInfo } from '../../utils/swal';
 import { useNavigate } from 'react-router-dom';
+import ActionButtons from '../../components/admincomponents/ActionButtons';
 
 export default function Dashboard() {
 
@@ -65,6 +67,24 @@ export default function Dashboard() {
     const riel = usd * 4000;
 
     return `$${usd.toFixed(2)} (៛${riel.toLocaleString()} )`;
+  };
+
+  const handleViewMovie = (movie) => {
+    const poster = movie.poster_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(movie.title)}`;
+    showInfo(`${movie.title}`, `
+      <div style="display:flex;justify-content:center;margin-bottom:16px">
+        <img
+          src="${poster}"
+          alt="${movie.title}"
+          style="width:140px;height:140px;border-radius:50%;object-fit:cover;border:2px solid rgba(255,255,255,0.25)"
+        />
+      </div>
+      <p><strong>Category:</strong> ${movie.category?.name || 'N/A'}</p>
+      <p><strong>Rating:</strong> ${movie.rating || 'N/A'}</p>
+      <p><strong>Quality:</strong> ${movie.quality || 'N/A'}</p>
+      <p><strong>Language:</strong> ${movie.language || 'N/A'}</p>
+      <p><strong>Release Year:</strong> ${movie.release_year || 'N/A'}</p>
+    `);
   };
 
   return (
@@ -136,6 +156,7 @@ export default function Dashboard() {
                   <th>Movie</th>
                   <th>Category</th>
                   <th>Rating</th>
+                  <th>View</th>
                 </tr>
               </thead>
 
@@ -144,12 +165,23 @@ export default function Dashboard() {
                   movies.map((m) => (
                     <tr
                       key={m._id}
-                      onClick={() => navigate(`/movies/${m._id}`)}
-                      style={{ cursor: "pointer" }}
+                      style={{ cursor: "default" }}
                     >
-                      <td>{m.title}</td>
+                      <td style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        <img
+                          src={m.poster_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(m.title)}`}
+                          alt={m.title}
+                          style={{ width: 40, height: 40, borderRadius: '50%', objectFit: 'cover', border: '1px solid rgba(255,255,255,0.15)' }}
+                        />
+                        <span>{m.title}</span>
+                      </td>
                       <td>{m.category?.name || "N/A"}</td>
                       <td>★ {m.rating || "0"}</td>
+                      <td>
+                        <ActionButtons
+                          onView={() => handleViewMovie(m)}
+                        />
+                      </td>
                     </tr>
                   ))
                 ) : (

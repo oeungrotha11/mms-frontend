@@ -3,6 +3,7 @@ import PageHeader from '../../components/admincomponents/PageHeader';
 import Badge from '../../components/admincomponents/Badge';
 import ActionButtons from '../../components/admincomponents/ActionButtons';
 import API from "../../api/axios";
+import { confirmDialog, showSuccess, showError } from '../../utils/swal';
 
 export default function Subscriptions() {
   const [subs, setSubs] = useState([]);
@@ -21,15 +22,26 @@ export default function Subscriptions() {
     fetchSubs();
   }, []);
 
+  const activeSubscriptions = subs.filter((item) => item.status === 'active').length;
+  const cancelledSubscriptions = subs.filter((item) => item.status === 'cancelled').length;
+
   // ✅ Cancel subscription
   const handleCancel = async (id) => {
-    if (!window.confirm("Cancel this subscription?")) return;
+    const result = await confirmDialog({
+      title: "Cancel subscription?",
+      text: "This will cancel the subscription immediately.",
+      confirmButtonText: "Cancel subscription"
+    });
+
+    if (!result.isConfirmed) return;
 
     try {
       await API.put(`/subscriptions/${id}/cancel`);
       fetchSubs();
+      showSuccess("Subscription cancelled");
     } catch (err) {
       console.error(err);
+      showError("Failed to cancel subscription");
     }
   };
 
@@ -49,6 +61,17 @@ export default function Subscriptions() {
         title="Subscriptions"
         subtitle="Active user subscriptions"
       />
+
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '1rem', marginBottom: '1rem' }}>
+        <div className="table-card" style={{ padding: '1rem 1.25rem' }}>
+          <div style={{ fontSize: '0.75rem', color: 'var(--muted)' }}>Active subscriptions</div>
+          <div style={{ fontSize: '1.6rem', fontWeight: 700, color: 'var(--accent)' }}>{activeSubscriptions}</div>
+        </div>
+        <div className="table-card" style={{ padding: '1rem 1.25rem' }}>
+          <div style={{ fontSize: '0.75rem', color: 'var(--muted)' }}>Cancelled subscriptions</div>
+          <div style={{ fontSize: '1.6rem', fontWeight: 700 }}>{cancelledSubscriptions}</div>
+        </div>
+      </div>
 
       <div className="table-card">
         <table>
@@ -71,21 +94,27 @@ export default function Subscriptions() {
                   
                   {/* USER */}
                   <td>
-                    <div className="user-cell">
-                      <img
-                        src={s.user?.profile_picture}
-                        className="user-avatar-sm"
-                        alt="avatar"
-                      />
-                      {s.user?.username}
+                    <div className="user-cell" style={{ flexDirection: 'column', alignItems: 'flex-start', gap: '4px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <img
+                          src={s.user?.profile_picture}
+                          className="user-avatar-sm"
+                          alt="avatar"
+                        />
+                        <strong>{s.user?.username || 'Unknown'}</strong>
+                      </div>
+                      <span style={{ fontSize: '0.85rem', color: 'var(--muted)' }}>
+                        {s.user?.email || 'No email'}
+                      </span>
                     </div>
                   </td>
 
                   {/* PLAN */}
                   <td>
-                    <Badge color="purple">
-                      {s.plan?.name}
-                    </Badge>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                      <strong>{s.plan?.name}</strong>
+                      <span style={{ fontSize: '0.8rem', color: 'var(--muted)' }}>{s.plan?.quality}</span>
+                    </div>
                   </td>
 
                   {/* DATES */}
@@ -106,7 +135,9 @@ export default function Subscriptions() {
 
                   {/* AUTO RENEW */}
                   <td>
-                    {s.auto_renew ? "✅ Yes" : "❌ No"}
+                    <Badge color={s.auto_renew ? 'green' : 'gray'}>
+                      {s.auto_renew ? 'Yes' : 'No'}
+                    </Badge>
                   </td>
 
                   {/* ACTIONS */}

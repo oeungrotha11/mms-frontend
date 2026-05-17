@@ -362,6 +362,11 @@ tbody tr:hover { background: rgba(255,255,255,.02); }
   font-size: .65rem; font-weight: 800; color: #000; flex-shrink: 0;
 }
 
+.user-avatar-sm.rounded-circle,
+.movie-thumb-circle {
+  border-radius: 50%;
+}
+
 /* FORM CARD */
 .form-card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 1.8rem; margin-bottom: 1.5rem; }
 .form-title { font-family: 'Syne', sans-serif; font-size: .9rem; font-weight: 700; margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border); }

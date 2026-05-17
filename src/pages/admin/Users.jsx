@@ -50,7 +50,15 @@ export default function Users() {
   };
 
   const handleViewUser = (user) => {
+    const avatar = user.profile_picture || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.username)}`;
     showInfo(`User: ${user.username}`, `
+      <div style="display:flex;justify-content:center;margin-bottom:16px">
+        <img
+          src="${avatar}"
+          alt="${user.username}"
+          style="width:110px;height:110px;border-radius:50%;object-fit:cover;border:2px solid rgba(255,255,255,0.25)"
+        />
+      </div>
       <p><strong>Email:</strong> ${user.email}</p>
       <p><strong>Role:</strong> ${user.role}</p>
       <p><strong>Status:</strong> ${user.status}</p>

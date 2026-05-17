@@ -8,24 +8,32 @@ export default function Categories() {
 
   const [categories, setCategories] = useState([]);
   const [form, setForm] = useState({ name: "", description: "" });
+  const [showForm, setShowForm] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingCategory, setEditingCategory] = useState(null);
 
- useEffect(() => {
-  fetch("http://localhost:5000/api/movies/categories/with-count")
-    .then(res => res.json())
-    .then(data => {
-      // console.log(data); // DEBUG
-      setCategories(data);
-    })
-    .catch(err => console.error(err));
-}, []);
+  useEffect(() => {
+    fetch("http://localhost:5000/api/movies/categories/with-count")
+      .then(res => res.json())
+      .then(data => {
+        // console.log(data); // DEBUG
+        setCategories(data);
+      })
+      .catch(err => console.error(err));
+  }, []);
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
   const handleSave = async () => {
+
+    // validation
+  if (!form.name.trim()) {
+    showError("Category name is required");
+    return;
+  }
+
     try {
 
       const res = await fetch("http://localhost:5000/api/movies/categories", {
@@ -34,15 +42,19 @@ export default function Categories() {
           "Content-Type": "application/json",
           Authorization: `Bearer ${localStorage.getItem("token")}`
         },
-        body: JSON.stringify(form)
+        body: JSON.stringify({
+          name: form.name.trim(),
+          description: form.description.trim()
+        })
       });
 
       const data = await res.json();
 
-      // console.log("Saved:", data);
       if (res.ok) {
+        
         setCategories([...categories, data]);
-        setForm({ name: "", description: "" }); // clear form
+        setForm({ name: "", description: "" });
+        setShowForm(false);
         showSuccess("Category added");
       } else {
         showError(data.message || "Error saving category");
@@ -50,8 +62,8 @@ export default function Categories() {
 
     } catch (err) {
       console.error(err);
+      showError("Server error");
     }
-    // setCategories([...categories, data]);
   };
 
   const categoryFields = [
@@ -114,10 +126,13 @@ export default function Categories() {
   return (
     <div>
       <PageHeader title="Categories" subtitle="Movie genre categories">
-        <button className="btn-primary">+ Add Category</button>
+        <button className="btn-primary"
+        onClick={() => setShowForm(!showForm)}
+        >+ Add Category</button>
       </PageHeader>
 
       {/* Add Form */}
+      {showForm && (
       <div className="form-card" style={{ maxWidth: '500px' }}>
         <div className="form-title">Add New Category</div>
         <div className="form-field" style={{ marginBottom: '1rem' }}>
@@ -139,12 +154,15 @@ export default function Categories() {
             placeholder="Optional description…" style={{ minHeight: '60px' }} />
         </div>
         <div className="form-actions">
-          <button className="btn-cancel">Clear</button>
+          <button className="btn-cancel"
+          onClick={() => setForm({ name: "", description: "" })}
+          >Clear</button>
           <button className="btn-primary" onClick={handleSave}>
             Save Category
           </button>
         </div>
       </div>
+      )}
 
       {/* Table */}
       <div className="table-card">
