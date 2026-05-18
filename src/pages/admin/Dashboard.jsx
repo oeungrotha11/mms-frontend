@@ -71,9 +71,10 @@ export default function Dashboard() {
   };
 
   const formatCurrencyDual = (usd) => {
-    const riel = usd * 4000;
+    const amount = Number(usd) || 0;
+    const riel = amount * 4000;
 
-    return `$${usd.toFixed(2)} (៛${riel.toLocaleString()} )`;
+    return `$${amount.toFixed(2)} (៛${riel.toLocaleString()} )`;
   };
 
   // Calculate total revenue from payments
@@ -112,7 +113,7 @@ export default function Dashboard() {
 
         <div onClick={() => navigate("/admin/payments")} style={{ cursor: "pointer" }}>
           <StatCard
-            value={formatCurrencyDual(stats?.revenue)}
+            value={formatCurrencyDual(displayRevenue)}
             label="Revenue"
           />
         </div>
