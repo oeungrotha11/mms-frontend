@@ -21,6 +21,7 @@ export default function Dashboard() {
     recentMovies: [],
     activities: []
   });
+  const [payments, setPayments] = useState([]);
   const [movies, setMovies] = useState([]);
   const navigate = useNavigate();
 
@@ -28,14 +29,16 @@ export default function Dashboard() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [statsRes, moviesRes, categoryRes] = await Promise.all([
+        const [statsRes, moviesRes, categoryRes, paymentsRes] = await Promise.all([
           API.get("admin/stats"),
           API.get("movies"),
-          API.get("movies/categories/with-count")
+          API.get("movies/categories/with-count"),
+          API.get("payments")
         ]);
 
         setStats(statsRes.data);
         setMovies(moviesRes.data.movies || []);
+        setPayments(paymentsRes.data || []);
 
         // optional: if you want categories in state
         // console.log(categoryRes.data);
@@ -46,6 +49,10 @@ export default function Dashboard() {
     };
 
     fetchData();
+    
+    // Refresh stats every 30 seconds for real-time updates
+    const interval = setInterval(fetchData, 30000);
+    return () => clearInterval(interval);
   }, []);
 
   //format money
@@ -68,6 +75,10 @@ export default function Dashboard() {
 
     return `$${usd.toFixed(2)} (៛${riel.toLocaleString()} )`;
   };
+
+  // Calculate total revenue from payments
+  const totalPaymentRevenue = payments.reduce((sum, payment) => sum + (payment.amount || 0), 0);
+  const displayRevenue = Math.max(stats?.revenue || 0, totalPaymentRevenue);
 
   const handleViewMovie = (movie) => {
     const poster = movie.poster_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(movie.title)}`;
@@ -108,6 +119,10 @@ export default function Dashboard() {
 
         <div onClick={() => navigate("/admin/reviews")} style={{ cursor: "pointer" }}>
           <StatCard value={stats?.totalReviews || 0} label="Total Reviews" />
+        </div>
+
+        <div onClick={() => navigate("/admin/subscriptions")} style={{ cursor: "pointer" }}>
+          <StatCard value={stats?.totalSubscriptions || 0} label="Active Subscriptions" />
         </div>
       </div>
 

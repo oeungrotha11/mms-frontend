@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import API from "../../api/axios";
-import { Link } from "react-router-dom";
 
 export default function WatchMovies() {
   const [movies, setMovies] = useState([]);
@@ -10,6 +10,7 @@ export default function WatchMovies() {
   const [totalPages, setTotalPages] = useState(1);
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
+  const navigate = useNavigate();
 
   // DEBOUNCE SEARCH
   useEffect(() => {
@@ -56,31 +57,6 @@ export default function WatchMovies() {
     fetchMovies();
   }, [debouncedSearch, page]);
 
-  // 🔥 TEST SUBSCRIBE BUTTON
-  const handleTestSubscribe = async () => {
-    try {
-      // get first plan (simple testing)
-      const plans = await API.get("/subscriptions/plans");
-
-      if (plans.data.length === 0) {
-        alert("No plans available");
-        return;
-      }
-
-      await API.post("/payments", {
-        userId: JSON.parse(localStorage.getItem("user")).id,
-        planId: plans.data[0]._id,
-        method: "test"
-      });
-
-      alert("✅ Subscribed successfully!");
-      fetchMovies();
-
-    } catch (err) {
-      console.error(err);
-      alert("Subscription failed");
-    }
-  };
 
   return (
     <div style={{ padding: "20px" }}>
@@ -116,7 +92,7 @@ export default function WatchMovies() {
           <p>{error}</p>
 
           <button
-            onClick={handleTestSubscribe}
+            onClick={() => navigate('/checkout')}
             style={{
               background: "#4f46e5",
               color: "#fff",
@@ -126,7 +102,7 @@ export default function WatchMovies() {
               cursor: "pointer"
             }}
           >
-            🔥 Subscribe (Test)
+            🔥 Go to checkout
           </button>
         </div>
       )}

@@ -29,13 +29,18 @@ export default function Payments() {
   };
 
   const handleViewPayment = (payment) => {
+    const isUpgrade = payment.isUpgrade || false;
+    const upgradeInfo = isUpgrade ? `<div style="background: #3a2a3a; padding: 12px; border-radius: 8px; margin: 12px 0; border-left: 4px solid #a78bfa;"><p style="margin: 0; color: #d8b4fe;"><strong>✨ Upgrade Payment</strong></p></div>` : '';
+    
     showInfo(`Payment ${payment._id.slice(-6)}`, `
+      ${upgradeInfo}
       <p><strong>User:</strong> ${payment.user?.username || 'N/A'}</p>
       <p><strong>Email:</strong> ${payment.user?.email || 'N/A'}</p>
       <p><strong>Plan:</strong> ${payment.plan?.name || 'N/A'}</p>
-      <p><strong>Amount:</strong> $${payment.amount}</p>
+      <p><strong>Amount:</strong> <span style="color: #22c55e; font-weight: 600;">$${Number(payment.amount).toFixed(2)}</span></p>
       <p><strong>Method:</strong> ${payment.method}</p>
-      <p><strong>Status:</strong> ${payment.status}</p>
+      <p><strong>Status:</strong> <span style="background: ${payment.status === 'completed' ? '#166534' : '#7f1d1d'}; padding: 4px 8px; border-radius: 4px; color: ${payment.status === 'completed' ? '#86efac' : '#fca5a5'};">${payment.status}</span></p>
+      <p><strong>Date:</strong> ${new Date(payment.created_at).toLocaleString()}</p>
     `);
   };
 
@@ -43,7 +48,7 @@ export default function Payments() {
     <div>
       <PageHeader title="Payments" subtitle="Transaction history" />
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '1rem', marginBottom: '1rem' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '1rem', marginBottom: '1rem' }}>
         <div className="table-card" style={{ padding: '1rem 1.25rem' }}>
           <div style={{ fontSize: '0.75rem', color: 'var(--muted)' }}>Total Revenue</div>
           <div style={{ fontSize: '1.6rem', fontWeight: 700, color: 'var(--accent)' }}>${totalRevenue.toFixed(2)}</div>
@@ -51,6 +56,14 @@ export default function Payments() {
         <div className="table-card" style={{ padding: '1rem 1.25rem' }}>
           <div style={{ fontSize: '0.75rem', color: 'var(--muted)' }}>Transactions</div>
           <div style={{ fontSize: '1.6rem', fontWeight: 700 }}>{totalTransactions}</div>
+        </div>
+        <div className="table-card" style={{ padding: '1rem 1.25rem' }}>
+          <div style={{ fontSize: '0.75rem', color: 'var(--muted)' }}>Completed</div>
+          <div style={{ fontSize: '1.6rem', fontWeight: 700, color: '#22c55e' }}>{payments.filter(p => p.status === 'completed').length}</div>
+        </div>
+        <div className="table-card" style={{ padding: '1rem 1.25rem' }}>
+          <div style={{ fontSize: '0.75rem', color: 'var(--muted)' }}>Failed</div>
+          <div style={{ fontSize: '1.6rem', fontWeight: 700, color: '#ef4444' }}>{payments.filter(p => p.status !== 'completed').length}</div>
         </div>
       </div>
 

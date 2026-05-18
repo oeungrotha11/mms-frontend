@@ -13,6 +13,12 @@ export default function Users() {
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingUser, setEditingUser] = useState(null);
 
+  const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [role, setRole] = useState("");
+  const [status, setStatus] = useState("");
+  const [page, setPage] = useState(1);
+
   const userFields = [
     { name: 'username', label: 'Username', type: 'text', placeholder: 'Username' },
     { name: 'email', label: 'Email', type: 'text', placeholder: 'Email address' },
@@ -22,12 +28,30 @@ export default function Users() {
     { name: 'profile_picture', label: 'Avatar URL', type: 'text', placeholder: 'Profile picture URL' }
   ];
 
+   useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(search);
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [search]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [debouncedSearch, role, status]);
+
   // FETCH USERS
   const fetchUsers = async () => {
     try {
-      const res = await API.get("/users");
-      setUsers(res.data);
+      const res = await API.get("/users", {
+        params: {
+          search: debouncedSearch || undefined,
+          role: role || undefined,
+          status: status || undefined
+        }
+      });
 
+      setUsers(res.data);
     } catch (err) {
       console.error("Failed to fetch users", err);
     }
@@ -35,7 +59,7 @@ export default function Users() {
 
   useEffect(() => {
     fetchUsers();
-  }, []);
+  }, [debouncedSearch, role, status]);
 
   // STATUS COLOR
   const getStatusColor = (status) => {
@@ -112,18 +136,29 @@ export default function Users() {
           type="text"
           placeholder="Search users…"
           style={{ width: '200px' }}
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
         />
 
-        <select>
-          <option>All Roles</option>
-          <option>User</option>
-          <option>Admin</option>
+        <select
+          value={role}
+          onChange={(e) => setRole(e.target.value)}
+          style={{ width: '140px' }}
+        >
+          <option value="">All Roles</option>
+          <option value="user">User</option>
+          <option value="admin">Admin</option>
         </select>
 
-        <select>
-          <option>All Status</option>
-          <option>Active</option>
-          <option>Banned</option>
+        <select
+          value={status}
+          onChange={(e) => setStatus(e.target.value)}
+          style={{ width: '140px' }}
+        >
+          <option value="">All Status</option>
+          <option value="active">Active</option>
+          <option value="inactive">Inactive</option>
+          <option value="banned">Banned</option>
         </select>
 
       </PageHeader>

@@ -2,7 +2,7 @@ import PageHeader from '../../components/admincomponents/PageHeader';
 import Badge from '../../components/admincomponents/Badge';
 import ActionButtons from '../../components/admincomponents/ActionButtons';
 import AdminEditModal from '../../components/admincomponents/AdminEditModal';
-import { confirmDialog, showSuccess, showError,showInfo } from '../../utils/swal';
+import { confirmDialog, showSuccess, showError, showInfo } from '../../utils/swal';
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 
@@ -23,6 +23,10 @@ export default function Movies() {
   const [newName, setNewName] = useState("");
 
   const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingMovie, setEditingMovie] = useState(null);
 
   const movieFields = [
     { name: 'title', label: 'Title', type: 'text', placeholder: 'Movie title' },
@@ -45,12 +49,9 @@ export default function Movies() {
     { name: 'quality', label: 'Quality', type: 'select', options: ['4K', 'Full HD', 'HD', 'SD'] },
     { name: 'status', label: 'Status', type: 'select', options: ['Active', 'Inactive'] },
     { name: 'poster_url', label: 'Poster URL', type: 'text', placeholder: 'https://example.com/poster.jpg' },
-    { name: 'trailer_url', label: 'Trailer URL', type: 'text', placeholder: 'https://youtube.com/embed/...'}
+    { name: 'trailer_url', label: 'Trailer URL', type: 'text', placeholder: 'https://youtube.com/embed/...' }
   ];
-  const [totalPages, setTotalPages] = useState(1);
 
-  const [showEditModal, setShowEditModal] = useState(false);
-  const [editingMovie, setEditingMovie] = useState(null);
 
   // ================= DEBOUNCE SEARCH =================
   useEffect(() => {
@@ -89,30 +90,30 @@ export default function Movies() {
   // ================= FETCH CATEGORIES =================
   const fetchCategories = async () => {
 
-  try {
+    try {
 
-    const res = await fetch(
-      "http://localhost:5000/api/movies/categories"
-    );
+      const res = await fetch(
+        "http://localhost:5000/api/movies/categories"
+      );
 
-    const data = await res.json();
+      const data = await res.json();
 
-    setCategories(
-      Array.isArray(data) ? data : []
-    );
+      setCategories(
+        Array.isArray(data) ? data : []
+      );
 
-  } catch (err) {
+    } catch (err) {
 
-    console.error(err);
-    setCategories([]);
+      console.error(err);
+      setCategories([]);
 
-  }
-};
+    }
+  };
 
-useEffect(() => {
-  fetchCategories();
-}, []);
-  
+  useEffect(() => {
+    fetchCategories();
+  }, []);
+
 
   // ================= DELETE =================
   const handleDelete = async (id, title) => {
@@ -181,12 +182,6 @@ useEffect(() => {
     `);
   };
 
-
-
-
-
-
-
   return (
     <div>
 
@@ -212,54 +207,7 @@ useEffect(() => {
             setPage(1);
           }}
         >
-          <div
-  style={{
-    marginBottom: "20px",
-    display: "flex",
-    gap: "10px",
-    flexWrap: "wrap"
-  }}
->
 
-  {categories.map((cat) => (
-
-    <div
-      key={cat._id}
-      style={{
-        background: "#111827",
-        padding: "10px 14px",
-        borderRadius: "10px",
-        display: "flex",
-        alignItems: "center",
-        gap: "10px",
-        color: "white"
-      }}
-    >
-
-      <span>{cat.name}</span>
-
-      <button
-        onClick={() => {
-          setEditingCategory(cat);
-          setNewName(cat.name);
-        }}
-        style={{
-          border: "none",
-          background: "#4f46e5",
-          color: "white",
-          padding: "5px 10px",
-          borderRadius: "6px",
-          cursor: "pointer"
-        }}
-      >
-        Edit
-      </button>
-
-    </div>
-
-  ))}
-
-</div>
           <option value="">All Categories</option>
 
           {categories.map(c => (
@@ -279,9 +227,9 @@ useEffect(() => {
         >
           <option value="">All Quality</option>
           <option value="4K">4K</option>
-<option value="Full HD">Full HD</option>
-<option value="HD">HD</option>
-<option value="SD">SD</option>
+          <option value="Full HD">Full HD</option>
+          <option value="HD">HD</option>
+          <option value="SD">SD</option>
         </select>
         <Link to={'/admin/add-movie'}>
           <button
@@ -421,7 +369,7 @@ useEffect(() => {
         onSave={handleSaveMovie}
       />
 
-      
+
     </div>
   );
 }

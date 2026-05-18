@@ -9,6 +9,7 @@ function Home() {
       <Link to={'login'}><button className='bg-amber-600 p-2 rounded-2xl'>login</button></Link>
       <Link to={'register'}><button className='bg-amber-100 p-2 rounded-2xl'>register</button></Link>
       <Link to={'user'}><button className='bg-amber-100 p-2 rounded-2xl'>User</button></Link>
+      <Link to={'checkout'}><button className='bg-amber-100 p-2 rounded-2xl'>Checkout</button></Link>
       <Link to={'watchmovies'}><button className='bg-amber-100 p-2 rounded-2xl'>watch movies</button></Link>
       </div>
     </div>

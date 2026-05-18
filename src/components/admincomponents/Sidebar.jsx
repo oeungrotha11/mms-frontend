@@ -10,41 +10,49 @@ export default function Sidebar() {
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useContext(AuthContext);
-  // ✅ MUST be inside component
   const [stats, setStats] = useState({
     totalUsers: 0,
     totalMovies: 0,
-    revenue: 0,
+    totalSubscriptions: 0,
+    totalPlans: 0,
+    totalPayments: 0,
     totalReviews: 0,
+    revenue: 0,
     monthlyRevenue: [],
     categoryStats: [],
     recentMovies: [],
     activities: []
   });
-  const [movies, setMovies] = useState([]);
 
-  // ✅ MUST be inside component
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [statsRes, moviesRes, categoryRes] = await Promise.all([
-          API.get("admin/stats"),
-          API.get("movies"),
-          API.get("movies/categories/with-count")
+        const [statsRes, usersRes, subsRes, plansRes, paymentsRes, reviewsRes] = await Promise.all([
+          API.get("/admin/stats").catch(() => ({ data: {} })),
+          API.get("/users").catch(() => ({ data: [] })),
+          API.get("/subscriptions").catch(() => ({ data: [] })),
+          API.get("/subscriptions/plans").catch(() => ({ data: [] })),
+          API.get("/payments").catch(() => ({ data: [] })),
+          API.get("/reviews").catch(() => ({ data: [] }))
         ]);
 
-        setStats(statsRes.data);
-        setMovies(moviesRes.data);
-
-        // optional: if you want categories in state
-        // console.log(categoryRes.data);
+        setStats({
+          ...statsRes.data,
+          totalUsers: usersRes.data.length,
+          totalSubscriptions: subsRes.data.length,
+          totalPlans: plansRes.data.length,
+          totalPayments: paymentsRes.data.length,
+          totalReviews: reviewsRes.data.length
+        });
 
       } catch (err) {
-        console.error("Dashboard error:", err);
+        console.error("Sidebar stats error:", err);
       }
     };
 
     fetchData();
+    const interval = setInterval(fetchData, 30000); // Refresh every 30 seconds
+    return () => clearInterval(interval);
   }, []);
 
   const navGroups = [
@@ -65,16 +73,16 @@ export default function Sidebar() {
     {
       label: 'Users',
       items: [
-        { icon: '👥', label: 'All Users', path: '/admin/users' },
-        { icon: '⭐', label: 'Reviews', path: '/admin/reviews',  badge: stats?.totalReviews ?? 0 },
+        { icon: '👥', label: 'All Users', path: '/admin/users', badge: stats?.totalUsers ?? 0 },
+        { icon: '⭐', label: 'Reviews', path: '/admin/reviews', badge: stats?.totalReviews ?? 0 },
       ],
     },
     {
       label: 'Monetization',
       items: [
-        { icon: '💳', label: 'Subscriptions', path: '/admin/subscriptions' },
-        { icon: '💰', label: 'Payments', path: '/admin/payments' },
-        { icon: '📋', label: 'Plans', path: '/admin/plans' },
+        { icon: '💳', label: 'Subscriptions', path: '/admin/subscriptions', badge: stats?.totalSubscriptions ?? 0 },
+        { icon: '💰', label: 'Payments', path: '/admin/payments', badge: stats?.totalPayments ?? 0 },
+        { icon: '📋', label: 'Plans', path: '/admin/plans', badge: stats?.totalPlans ?? 0 },
       ],
     },
     {

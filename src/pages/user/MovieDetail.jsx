@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import ReactPlayer from "react-player";
+import Swal from "sweetalert2";
 import API from "../../api/axios";
 import EditReviewModal from "../../components/usercomponents/EditReviewModal";
+import { showInfo, confirmDialog, showSuccess, showError } from "../../utils/swal";
 
 export default function MovieDetail() {
 
@@ -117,6 +119,34 @@ export default function MovieDetail() {
 
       console.error(err);
 
+    }
+  };
+
+  const handleFlag = async (reviewId) => {
+    try {
+      const result = await Swal.fire({
+        title: "Report this review",
+        html: '<p style="text-align: left; margin-bottom: 12px;">Why are you reporting this review?</p>',
+        input: "text",
+        inputPlaceholder: "e.g., Inappropriate content, Spam, Offensive language",
+        showCancelButton: true,
+        confirmButtonText: "Report",
+        cancelButtonText: "Cancel",
+        inputValidator: (value) => {
+          if (!value || !value.trim()) {
+            return "Please provide a reason";
+          }
+        }
+      });
+
+      if (!result.isConfirmed) return;
+
+      await API.put(`/reviews/${reviewId}/flag`, { reason: result.value });
+      showSuccess("Review flagged. Thank you for reporting!");
+      fetchMovie();
+    } catch (err) {
+      console.error(err);
+      showError("Failed to flag review");
     }
   };
 
@@ -463,6 +493,23 @@ export default function MovieDetail() {
                   </div>
 
                 )}
+
+                <button
+                  onClick={() => handleFlag(r._id)}
+                  style={{
+                    marginTop: "10px",
+                    background: "#8b5cf6",
+                    color: "#fff",
+                    border: "none",
+                    padding: "8px 14px",
+                    borderRadius: "8px",
+                    cursor: "pointer",
+                    fontSize: "0.9rem"
+                  }}
+                  title="Report inappropriate content"
+                >
+                  🚩 Report
+                </button>
 
 
               </div>

@@ -3,7 +3,7 @@ import PageHeader from "../../components/admincomponents/PageHeader";
 import Badge from "../../components/admincomponents/Badge";
 import ActionButtons from "../../components/admincomponents/ActionButtons";
 import API from "../../api/axios";
-import { confirmDialog, showSuccess, showError } from '../../utils/swal';
+import { confirmDialog, showSuccess, showError, showInfo } from '../../utils/swal';
 
 export default function Reviews() {
 
@@ -55,6 +55,14 @@ export default function Reviews() {
   // APPROVE REVIEW
   const handleApprove = async (id) => {
     try {
+      const result = await confirmDialog({
+        title: "Approve review?",
+        text: "This review will be marked as approved.",
+        confirmButtonText: "Approve"
+      });
+
+      if (!result.isConfirmed) return;
+
       await API.put(`/reviews/${id}/approve`);
       fetchReviews();
       showSuccess("Review approved");
@@ -146,18 +154,18 @@ export default function Reviews() {
                     <div className="user-cell">
 
                       <img
-                        src={r.user?.profile_picture}
+                        src={r.user_id?.profile_picture || `https://ui-avatars.com/api/?name=${encodeURIComponent(r.user_id?.username || 'User')}`}
                         alt=""
                         className="user-avatar-sm"
                         onError={(e) => {
                           e.target.src =
-                            `https://ui-avatars.com/api/?name=${r.user?.username}`;
+                            `https://ui-avatars.com/api/?name=${encodeURIComponent(r.user_id?.username || 'User')}`;
                         }}
                       />
 
                       <div>
                         <div style={{ fontWeight: 600 }}>
-                          {r.user?.username}
+                          {r.user_id?.username || 'Unknown user'}
                         </div>
 
                         <div
@@ -166,7 +174,7 @@ export default function Reviews() {
                             color: "var(--muted)"
                           }}
                         >
-                          {r.user?.email}
+                          {r.user_id?.email || 'No email'}
                         </div>
                       </div>
 
@@ -185,7 +193,7 @@ export default function Reviews() {
                     >
 
                       <img
-                        src={r.movie?.poster_url}
+                        src={r.movie_id?.poster_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(r.movie_id?.title || 'Movie')}`}
                         alt=""
                         style={{
                           width: "45px",
@@ -193,11 +201,14 @@ export default function Reviews() {
                           objectFit: "cover",
                           borderRadius: "8px"
                         }}
+                        onError={(e) => {
+                          e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(r.movie_id?.title || 'Movie')}`;
+                        }}
                       />
 
                       <div>
                         <div style={{ fontWeight: 600 }}>
-                          {r.movie?.title}
+                          {r.movie_id?.title || 'Unknown movie'}
                         </div>
 
                         <div
@@ -206,7 +217,7 @@ export default function Reviews() {
                             color: "var(--muted)"
                           }}
                         >
-                          {r.movie?.release_year}
+                          {r.movie_id?.release_year || 'No year'}
                         </div>
                       </div>
 
@@ -252,7 +263,7 @@ export default function Reviews() {
                   {/* DATE */}
                   <td>
 
-                    {new Date(r.createdAt).toLocaleDateString()}
+                    {new Date(r.review_date).toLocaleDateString()}
 
                   </td>
 
@@ -271,7 +282,15 @@ export default function Reviews() {
                     <ActionButtons
 
                       onView={() => {
-                        alert(r.comment);
+                        showInfo(`${r.user_id?.username}'s review on ${r.movie_id?.title}`, `
+                          <div style="text-align: left;">
+                            <p><strong>Rating:</strong> ${renderStars(r.rating)}</p>
+                            <p><strong>Comment:</strong></p>
+                            <p>${r.comment || 'No comment'}</p>
+                            ${r.status === "flagged" && r.flagged_reason ? `<div style="background: #7f1d1d; padding: 12px; border-radius: 8px; margin-top: 16px;"><p style="margin: 0; color: #fca5a5;"><strong>🚩 Flagged reason:</strong> ${r.flagged_reason}</p></div>` : ''}
+                            <p style="font-size: 0.85rem; color: #9ca3b8; margin-top: 16px;">${new Date(r.review_date).toLocaleDateString()}</p>
+                          </div>
+                        `);
                       }}
 
                       onApprove={

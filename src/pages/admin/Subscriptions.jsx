@@ -45,6 +45,26 @@ export default function Subscriptions() {
     }
   };
 
+  // ✅ Delete subscription
+  const handleDelete = async (id) => {
+    const result = await confirmDialog({
+      title: "Delete subscription?",
+      text: "This will permanently remove the subscription record.",
+      confirmButtonText: "Delete"
+    });
+
+    if (!result.isConfirmed) return;
+
+    try {
+      await API.put(`/subscriptions/${id}/cancel`);
+      fetchSubs();
+      showSuccess("Subscription deleted");
+    } catch (err) {
+      console.error(err);
+      showError("Failed to delete subscription");
+    }
+  };
+
   // 🎨 Status color
   const getStatusColor = (status) => {
     switch (status) {
@@ -62,7 +82,7 @@ export default function Subscriptions() {
         subtitle="Active user subscriptions"
       />
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '1rem', marginBottom: '1rem' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '1rem', marginBottom: '1rem' }}>
         <div className="table-card" style={{ padding: '1rem 1.25rem' }}>
           <div style={{ fontSize: '0.75rem', color: 'var(--muted)' }}>Active subscriptions</div>
           <div style={{ fontSize: '1.6rem', fontWeight: 700, color: 'var(--accent)' }}>{activeSubscriptions}</div>
@@ -70,6 +90,19 @@ export default function Subscriptions() {
         <div className="table-card" style={{ padding: '1rem 1.25rem' }}>
           <div style={{ fontSize: '0.75rem', color: 'var(--muted)' }}>Cancelled subscriptions</div>
           <div style={{ fontSize: '1.6rem', fontWeight: 700 }}>{cancelledSubscriptions}</div>
+        </div>
+        <div className="table-card" style={{ padding: '1rem 1.25rem' }}>
+          <div style={{ fontSize: '0.75rem', color: 'var(--muted)' }}>Total subscriptions</div>
+          <div style={{ fontSize: '1.6rem', fontWeight: 700, color: '#a78bfa' }}>{subs.length}</div>
+        </div>
+        <div className="table-card" style={{ padding: '1rem 1.25rem' }}>
+          <div style={{ fontSize: '0.75rem', color: 'var(--muted)' }}>Expiring soon</div>
+          <div style={{ fontSize: '1.6rem', fontWeight: 700, color: '#fbbf24' }}>
+            {subs.filter(s => {
+              const daysLeft = (new Date(s.end_date) - new Date()) / (1000 * 60 * 60 * 24);
+              return daysLeft > 0 && daysLeft <= 7 && s.status === 'active';
+            }).length}
+          </div>
         </div>
       </div>
 
@@ -143,7 +176,8 @@ export default function Subscriptions() {
                   {/* ACTIONS */}
                   <td>
                     <ActionButtons
-                      onDelete={() => handleCancel(s._id)}
+                      onEdit={() => handleCancel(s._id)}
+                      onDelete={() => handleDelete(s._id)}
                     />
                   </td>
 
