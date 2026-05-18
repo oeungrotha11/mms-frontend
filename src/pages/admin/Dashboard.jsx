@@ -78,7 +78,9 @@ export default function Dashboard() {
   };
 
   // Calculate total revenue from payments
-  const totalPaymentRevenue = payments.reduce((sum, payment) => sum + (payment.amount || 0), 0);
+  const totalPaymentRevenue = payments
+    .filter((payment) => payment.status === "completed")
+    .reduce((sum, payment) => sum + (Number(payment.amount) || 0), 0);
   const displayRevenue = Math.max(stats?.revenue || 0, totalPaymentRevenue);
 
   const handleViewMovie = (movie) => {

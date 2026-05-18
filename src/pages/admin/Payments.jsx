@@ -21,7 +21,8 @@ export default function Payments() {
     fetchPayments();
   }, []);
 
-  const totalRevenue = payments.reduce((sum, payment) => sum + (payment.amount || 0), 0);
+  const completedPayments = payments.filter((payment) => payment.status === "completed");
+  const totalRevenue = completedPayments.reduce((sum, payment) => sum + (Number(payment.amount) || 0), 0);
   const totalTransactions = payments.length;
 
   const getStatusColor = (status) => {
@@ -59,7 +60,7 @@ export default function Payments() {
         </div>
         <div className="table-card" style={{ padding: '1rem 1.25rem' }}>
           <div style={{ fontSize: '0.75rem', color: 'var(--muted)' }}>Completed</div>
-          <div style={{ fontSize: '1.6rem', fontWeight: 700, color: '#22c55e' }}>{payments.filter(p => p.status === 'completed').length}</div>
+          <div style={{ fontSize: '1.6rem', fontWeight: 700, color: '#22c55e' }}>{completedPayments.length}</div>
         </div>
         <div className="table-card" style={{ padding: '1rem 1.25rem' }}>
           <div style={{ fontSize: '0.75rem', color: 'var(--muted)' }}>Failed</div>
@@ -121,7 +122,7 @@ export default function Payments() {
 
                   {/* AMOUNT */}
                   <td style={{ color: 'var(--accent)', fontWeight: 600 }}>
-                    ${p.amount}
+                    ${Number(p.amount || 0).toFixed(2)}
                   </td>
 
                   {/* METHOD */}
