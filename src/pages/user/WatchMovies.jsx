@@ -139,6 +139,21 @@ export default function WatchMovies() {
               <p style={{ fontSize: "12px", color: "#9ca3af" }}>
                 {m.category?.name || "No category"}
               </p>
+
+              <div style={{ 
+                display: "flex", 
+                alignItems: "center", 
+                gap: "5px", 
+                marginTop: "5px",
+                fontSize: "13px"
+              }}>
+                <span style={{ color: "#fbbf24" }}>★</span>
+                <span>{m.avgRating ? m.avgRating.toFixed(1) : "0.0"}</span>
+                <span style={{ color: "#6b7280", fontSize: "11px" }}>
+                  ({m.totalReviews || 0} reviews)
+                </span>
+              </div>
+
               <Link to={`/movies/${m._id}`}>
                 <button
                   style={{

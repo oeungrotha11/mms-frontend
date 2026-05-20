@@ -305,6 +305,39 @@ export default function MovieDetail() {
           ⭐ Reviews
         </h2>
 
+        {/* MOVIE RATING SUMMARY */}
+        {movie && (
+          <div
+            style={{
+              background: "#171923",
+              padding: "20px",
+              borderRadius: "16px",
+              marginBottom: "30px",
+              display: "flex",
+              alignItems: "center",
+              gap: "20px"
+            }}
+          >
+            <div style={{ textAlign: "center" }}>
+              <div style={{ fontSize: "3rem", color: "#fbbf24", fontWeight: "bold" }}>
+                {movie.avgRating ? movie.avgRating.toFixed(1) : "0.0"}
+              </div>
+              <div style={{ color: "#9ca3af", fontSize: "14px" }}>
+                {movie.totalReviews || 0} reviews
+              </div>
+            </div>
+            <div>
+              <div style={{ color: "#d1d5db" }}>
+                {"★".repeat(Math.round(movie.avgRating || 0))}
+                {"☆".repeat(5 - Math.round(movie.avgRating || 0))}
+              </div>
+              <p style={{ color: "#9ca3af", marginTop: "10px", fontSize: "13px" }}>
+                Average rating from {movie.totalReviews || 0} user{(movie.totalReviews || 0) !== 1 ? "s" : ""}
+              </p>
+            </div>
+          </div>
+        )}
+
         {/* ADD REVIEW */}
 
         <div
