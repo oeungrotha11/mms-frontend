@@ -94,7 +94,7 @@ export default function Dashboard() {
         />
       </div>
       <p><strong>Category:</strong> ${movie.category?.name || 'N/A'}</p>
-      <p><strong>Rating:</strong> ${movie.rating || 'N/A'}</p>
+      <p><strong>Rating:</strong> ★ ${movie.avgRating ? movie.avgRating.toFixed(1) : '0.0'} (${movie.totalReviews || 0} reviews)</p>
       <p><strong>Quality:</strong> ${movie.quality || 'N/A'}</p>
       <p><strong>Language:</strong> ${movie.language || 'N/A'}</p>
       <p><strong>Release Year:</strong> ${movie.release_year || 'N/A'}</p>
@@ -194,7 +194,7 @@ export default function Dashboard() {
                         <span>{m.title}</span>
                       </td>
                       <td>{m.category?.name || "N/A"}</td>
-                      <td>★ {m.rating || "0"}</td>
+                      <td>★ {m.avgRating ? m.avgRating.toFixed(1) : "0.0"}</td>
                       <td>
                         <ActionButtons
                           onView={() => handleViewMovie(m)}

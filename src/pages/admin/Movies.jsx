@@ -174,6 +174,7 @@ export default function Movies() {
         />
       </div>
       <p><strong>Category:</strong> ${movie.category?.name || 'N/A'}</p>
+      <p><strong>Rating:</strong> ★ ${movie.avgRating ? movie.avgRating.toFixed(1) : '0.0'} (${movie.totalReviews || 0} reviews)</p>
       <p><strong>Quality:</strong> ${movie.quality || 'N/A'}</p>
       <p><strong>Duration:</strong> ${movie.duration} min</p>
       <p><strong>Language:</strong> ${movie.language || 'N/A'}</p>
