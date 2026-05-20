@@ -4,6 +4,8 @@ import Login from './pages/Login'
 import Register from './pages/Register'
 import Home from './pages/user/Home'
 import './index.css';
+import './styles/admin.css';
+import './styles/user.css';
 
 import Movies from './pages/admin/Movies'
 import Dashboard from './pages/admin/Dashboard'
